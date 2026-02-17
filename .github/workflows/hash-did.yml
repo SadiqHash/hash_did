@@ -1,0 +1,44 @@
+name: Hash DID CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Configure Poetry
+        run: poetry config virtualenvs.create false
+
+      - name: Install dependencies (with dev + api)
+        run: poetry install --with dev --with api
+
+      - name: Lint (Ruff)
+        run: ruff check .
+
+      - name: Format check (Black)
+        run: black --check .
+
+      - name: Type check (MyPy)
+        run: mypy hash_did
+
+      - name: Run tests
+        run: pytest --cov=hash_did --cov-report=term
